@@ -1,0 +1,57 @@
+Sub vector_make (vec As Vector, size&)
+    If vec.init = 1 Then
+        _MemFree vec.ptr
+    End If
+    vec.item_size = 4
+    vec.init = 1
+    If size& > 0 Then
+        vec.capacity = size&
+        vec.size = size&
+    Else
+        vec.capacity = 8
+        vec.size = 0
+    End If
+    vec.ptr = _MemNew(vec.capacity * vec.item_size)
+    If vec.size > 0 Then
+        _MemFill vec.ptr, vec.ptr.OFFSET, vec.size * vec.item_size, 0 As _BYTE
+    End If
+    ' Print "Made new vector with capacity " + Str$(vec.capacity) + " and size " + Str$(vec.size)
+End Sub
+
+Sub vector_free (vec As Vector)
+    If vec.init = 1 Then
+        _MemFree vec.ptr
+        vec.init = 0
+    End If
+    ' Print "Freed vector"
+End Sub
+
+Sub vector_double (vec As Vector)
+    Dim newcap As _Unsigned Long, newmem As _MEM
+    newcap = vec.capacity * 2
+    newmem = _MemNew(newcap * vec.item_size)
+    _MemCopy vec.ptr, vec.ptr.OFFSET, vec.capacity * vec.item_size To newmem, newmem.OFFSET
+    Swap vec.ptr, newmem
+    _MemFree newmem
+    vec.capacity = newcap
+    ' Print "Resized vector to capacity " + Str$(vec.capacity) + ", size " + Str$(vec.size)
+End Sub
+
+Function vector_get (vec As Vector, index&)
+    If vec.init = 0 Or index& < 0 Or index& >= vec.size Then
+        Error 1
+    End If
+    vector_get = _MemGet(vec.ptr, vec.ptr.OFFSET + index& * vec.item_size, Long)
+End Function
+
+Sub vector_push (vec As Vector, value&)
+    If vec.init = 0 Then
+        Call vector_make(vec, 0)
+    End If
+    If vec.size = vec.capacity Then
+        Call vector_double(vec)
+    End If
+    _MemPut vec.ptr, vec.ptr.OFFSET + vec.size * vec.item_size, value&
+    vec.size = vec.size + 1
+End Sub
+
